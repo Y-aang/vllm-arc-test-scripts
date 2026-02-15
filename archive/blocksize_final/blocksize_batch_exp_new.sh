@@ -5,7 +5,7 @@ BATCH_SIZES=(1 2 4 8 16 32)
 RESULTS_FILE="./result/results.txt"
 LATENCIES_FILE="./result/latencies.txt"
 
-# 清空旧的结果文件
+# Clear old result files
 echo "Block Size, Mean Latency, Std Dev" > $RESULTS_FILE
 echo "Block Size, Latencies" > $LATENCIES_FILE
 

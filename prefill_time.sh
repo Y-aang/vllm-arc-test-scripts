@@ -4,7 +4,7 @@ Prompt_lengths=(32 64 128 256 512 1024 2048 4096 8192)
 RESULTS_FILE="./result/results.txt"
 LATENCIES_FILE="./result/latencies.txt"
 
-# 清空旧的结果文件
+# Clear outdated result files
 echo "Block Size, Mean Latency, Std Dev" > $RESULTS_FILE
 echo "Block Size, Latencies" > $LATENCIES_FILE
 

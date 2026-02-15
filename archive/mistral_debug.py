@@ -1,22 +1,22 @@
 from vllm import LLM, SamplingParams
 import pickle
 
-# 读取数据
+# Load data
 with open("/home/shenyang/data/doc_query_dict.pkl", 'rb') as pfile:
     doc_query_dict = pickle.load(pfile)
 
 print('Total documents:', len(doc_query_dict))
 
-# 获取第一个文档及其第一个问题
+# Get the first document and its first query
 first_doc, first_queries = next(iter(doc_query_dict.items()))
 first_query = first_queries[0]
 
-# 构造 prompt
+# Construct the prompt
 prompt = f"Wiki Document: {first_doc}\nAnswer the following question based on WikiQA:\nQuestion: {first_query}\nAnswer:"
 print("\n=== DEBUG: Generated Prompt ===\n")
 print(prompt)
 
-# 初始化 vLLM
+# Initialize vLLM
 model_name = "mistralai/mistral-7b-v0.1"
 llm = LLM(model=model_name, 
           max_model_len=4096,
@@ -25,10 +25,10 @@ llm = LLM(model=model_name,
           disable_sliding_window=True,
         )
 
-# 运行推理
+# Run inference
 sampling_params = SamplingParams(max_tokens=15)
 output = llm.generate(prompt, sampling_params)
 
-# 打印输出
+# Print output
 print("\n=== DEBUG: Model Output ===\n")
 print(output[0].outputs[0].text.strip())

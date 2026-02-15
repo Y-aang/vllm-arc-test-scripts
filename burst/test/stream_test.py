@@ -7,7 +7,7 @@ async def vllm_test_like_call_server():
     url = "http://localhost:8000/generate"
     headers = {"Content-Type": "application/json"}
     data = {
-        "prompt": "你好，介绍一下你自己",
+        "prompt": "Hello, introduce yourself",
         "n": 1,
         "temperature": 0.0,
         "max_tokens": 1,
@@ -39,7 +39,7 @@ async def vllm_test_like_call_server():
                 while b"\n" in buffer:
                     json_str, buffer = buffer.split(b"\n", 1)
 
-            # 最后一次完整 JSON
+            # Last complete JSON
             if json_str:
                 output = json.loads(json_str.decode("utf-8"))
                 print("[FINAL OUTPUT]", output)

@@ -8,7 +8,7 @@ from transformers import (
     TextIteratorStreamer
 )
 
-model_name = "mistralai/mistral-7b-v0.1"  # 替换为你的模型
+model_name = "mistralai/mistral-7b-v0.1"  # Replace with your model
 base_text = "This is a sentence of 32 tokens, please follow this prompt to generate some sentences. You can generate any thing that you want. Best luck, guy"
 repeat_count = 64 // 32
 document = (base_text * repeat_count).strip().rsplit(" ", 1)[0]
@@ -18,20 +18,20 @@ print("Loading model and tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    torch_dtype=torch.float16,  # 如果支持半精度
-    device_map="auto"          # 自动放到GPU上
+    torch_dtype=torch.float16,  # Use half precision if supported
+    device_map="auto"          # Automatically place on GPU
 )
 
 # -------------------------------------------------------------------
-# 1. 创建一个 TextIteratorStreamer 实例
-#    skip_prompt=True 会使得输出中跳过原始输入部分
-#    skip_special_tokens=True 会过滤掉特殊token
+# 1. Create a TextIteratorStreamer instance
+#    skip_prompt=True skips the original input portion in the output
+#    skip_special_tokens=True filters out special tokens
 # -------------------------------------------------------------------
 streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
 # -------------------------------------------------------------------
-# 2. 定义一个线程来消费 streamer 的输出。每次 streamer 有新的文本片段，
-#    都会在这个线程里被处理。
+# 2. Define a thread to consume the streamer's output. Each time the
+#    streamer has a new text fragment, it will be processed in this thread.
 # -------------------------------------------------------------------
 start_time = None
 first_token_time = None
@@ -39,36 +39,36 @@ first_token_time = None
 def stream_consumer():
     global first_token_time
     for new_text in streamer:
-        # 如果是第一次获取到生成内容，记录首token到达时间
+        # If this is the first generated content received, record the first token arrival time
         if first_token_time is None:
             first_token_time = time.time()
         print(new_text, end="", flush=True)
 
 # -------------------------------------------------------------------
-# 3. 在主线程里先启动消费者线程，然后开始调用 generate()
+# 3. In the main thread, start the consumer thread first, then call generate()
 # -------------------------------------------------------------------
 consumer_thread = threading.Thread(target=stream_consumer)
 consumer_thread.start()
 
-# 记录调用 generate() 前的时间
+# Record time before calling generate()
 start_time = time.time()
 
-# 配置一下不使用KV Cache，仅作演示（会大幅降低推理速度）
+# Disable KV Cache for demonstration only (significantly reduces inference speed)
 model.config.use_cache = False
 
-# 调用 generate()，并把 streamer 传进去
+# Call generate() and pass in the streamer
 input_ids = tokenizer(prompt, return_tensors="pt").to(model.device)
 output_ids = model.generate(
     **input_ids,
     streamer=streamer,
     max_new_tokens=50,
-    use_cache=False  # 再次显式关闭KV Cache
+    use_cache=False  # Explicitly disable KV Cache again
 )
 
-consumer_thread.join()  # 等待生成流结束
+consumer_thread.join()  # Wait for generation stream to finish
 
 # -------------------------------------------------------------------
-# 4. 计算 time to first token (TTF)
+# 4. Calculate time to first token (TTF)
 # -------------------------------------------------------------------
 if first_token_time is not None:
     ttf = first_token_time - start_time

@@ -6,7 +6,7 @@ from tqdm import tqdm
 import torch.distributed as dist
 import statistics
 
-# 在程序最后显式销毁进程组
+# Explicitly destroy the process group at the end of the program
 if dist.is_initialized():
     dist.destroy_process_group()
 
@@ -30,8 +30,8 @@ for block_size in block_sizes:
     try:
         # if 'llm' in locals():
         #     del llm
-        #     gc.collect()  # 强制垃圾回收
-        #     torch.cuda.empty_cache()  # 清理显存
+        #     gc.collect()  # Force garbage collection
+        #     torch.cuda.empty_cache()  # Clear GPU memory
         
         print(f"Testing block size: {block_size}")
         llm = LLM(model=model_name, 

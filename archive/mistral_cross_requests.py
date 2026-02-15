@@ -6,7 +6,7 @@ from tqdm import tqdm
 import torch.distributed as dist
 import statistics
 
-# 在程序最后显式销毁进程组
+# Explicitly destroy the process group at the end of the program
 if dist.is_initialized():
     dist.destroy_process_group()
 
@@ -30,8 +30,8 @@ for block_size in block_sizes:
     try:
         # if 'llm' in locals():
         #     del llm
-        #     gc.collect()  # 强制垃圾回收
-        #     torch.cuda.empty_cache()  # 清理显存
+        #     gc.collect()  # Force garbage collection
+        #     torch.cuda.empty_cache()  # Clear GPU memory
         
         print(f"Testing block size: {block_size}")
         llm = LLM(model=model_name, 
@@ -43,7 +43,7 @@ for block_size in block_sizes:
                   disable_sliding_window=True
                 )
 
-        block_times = []  # 用于记录当前 block_size 的时间
+        block_times = []  # Records timing for the current block_size
         for doc, queries in tqdm(list(doc_query_dict.items())):
             query_times = []
             answer_length = []
@@ -58,7 +58,7 @@ for block_size in block_sizes:
                 
                 elapsed_time = end_time - start_time
                 generated_text = output[0].outputs[0].text.strip()
-                num_generated_tokens = len(generated_text.split())  # 计算生成的 token 数量
+                num_generated_tokens = len(generated_text.split())  # Calculate the number of generated tokens
                 query_times.append(elapsed_time)
                 answer_length.append(num_generated_tokens)
 

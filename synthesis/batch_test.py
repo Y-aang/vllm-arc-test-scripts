@@ -13,7 +13,7 @@ os.environ["VLLM_ALLOW_LONG_MAX_MODEL_LEN"] = "1"
 random.seed(42)
 np.random.seed(42)
 
-# ==== 参数和目录设置 ====
+# ==== Parameter and directory setup ====
 parser = argparse.ArgumentParser(description="Run vLLM with continuous batching at 10 req/s.")
 parser.add_argument("--cp_ratio", type=float, default=20.0, help="Custom CP_ratio value (default: 20.0)")
 args = parser.parse_args()
@@ -34,9 +34,9 @@ if os.path.exists(file_path):
 with open(json_path, 'r', encoding='utf-8') as f:
     prompts = json.load(f)
 
-# ==== 异步请求函数 ====
+# ==== Async request function ====
 async def run_request(engine, tokenizer, sampling_params, prompt):
-    # 发起生成请求
+    # Initiate generation request
     request_id = str(hash(prompt))
     arrival_time = asyncio.get_event_loop().time()
     async for output in engine.generate(prompt, sampling_params, request_id):
@@ -44,20 +44,20 @@ async def run_request(engine, tokenizer, sampling_params, prompt):
             first_token_time = output.metrics.first_token_time
             latency = first_token_time - arrival_time
 
-            # 写日志
+            # Write log
             async with aiofiles.open(file_path, "a") as f:
                 await f.write(f"{prompt}\t{latency:.6f}\n")
 
-            # 打印结果
+            # Print results
             print(f"Prompt: {prompt}")
             print(f"First token latency: {latency:.5f} s")
             text = output.outputs[0].text if output.outputs else ""
             print(f"Generated text length: {len(tokenizer(text)['input_ids'])} tokens\n")
             return latency
 
-# ==== 主协程 ====
+# ==== Main coroutine ====
 async def main():
-    # 初始化 AsyncLLMEngine
+    # Initialize AsyncLLMEngine
     engine_args = AsyncEngineArgs(
         model=model_config['model_name'],
         gpu_memory_utilization=gpu_memory_utilization,
@@ -73,16 +73,16 @@ async def main():
     tasks = []
     latencies = []
 
-    # 以 10 req/s 的速率调度
+    # Schedule at 10 req/s rate
     for prompt in prompts:
         tasks.append(asyncio.create_task(run_request(engine, tokenizer, sampling_params, prompt)))
-        await asyncio.sleep(0.1)  # 0.1 s 间隔 ⇒ 10 req/s
+        await asyncio.sleep(0.1)  # 0.1 s interval => 10 req/s
 
-    # 等待所有任务完成
+    # Wait for all tasks to complete
     results = await asyncio.gather(*tasks)
     latencies = [lat for lat in results if lat is not None]
 
-    # 汇总
+    # Summary
     print("First token latencies:", [round(lat, 5) for lat in latencies])
     print("Average latency:", round(sum(latencies) / len(latencies), 5), "s")
 

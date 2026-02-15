@@ -1,29 +1,29 @@
 #!/bin/bash
 
-# ========== 实验配置 ==========
-model_name="DeepSeek-R1-Distill-Qwen-1.5B"   # 模型名称（可修改）
-dataset_name="wild"                           # 数据集名称（可修改）
-sample_strategy="all"                         # 采样策略（可修改）
-cache_strategy="lru"                          # 缓存策略（"lru" / "arc" / "dbl"）
+# ========== Experiment Configuration ==========
+model_name="DeepSeek-R1-Distill-Qwen-1.5B"   # Model name (modifiable)
+dataset_name="wild"                           # Dataset name (modifiable)
+sample_strategy="all"                         # Sampling strategy (modifiable)
+cache_strategy="lru"                          # Cache strategy ("lru" / "arc" / "dbl")
 
-script_name="test_script_batch.py"            # 调用的 Python 脚本
-param_name="cache_size"                       # 测试参数名
-block_size=16                                 # ✅ 每个 block 的 token 数，可灵活修改
+script_name="test_script_batch.py"            # Python script to call
+param_name="cache_size"                       # Test parameter name
+block_size=16                                 # Number of tokens per block, modifiable
 
-# ========== 输出目录结构 ==========
+# ========== Output Directory Structure ==========
 output_dir="./test/${model_name}/${dataset_name}/${sample_strategy}/${cache_strategy}"
 
-# 创建输出文件夹
+# Create output directory
 mkdir -p "$output_dir"
 
-# ========== 固定的 Cache Size（单位：block）==========
-size=5000                                    # 你要的固定 cache size（按 block 计），可改
+# ========== Fixed Cache Size (unit: blocks) ==========
+size=5000                                    # Fixed cache size (in blocks), modifiable
 
-# 计算实际 token 数
+# Calculate actual token count
 actual_size=$((size * block_size))
 output_file_base="${output_dir}/${actual_size}"
 
-# ========== 重复执行 8 次 ==========
+# ========== Repeat execution ==========
 for i in 1 2 3 4
 do
     output_file="${output_file_base}_${i}.txt"

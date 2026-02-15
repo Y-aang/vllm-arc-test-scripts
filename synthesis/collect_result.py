@@ -4,15 +4,15 @@ import pandas as pd
 
 def calculate_hitrate_after_cold_start(lines):
     """
-    计算冷启动后的命中率
+    Calculate hit rate after cold start
     
     Args:
-        lines: 日志文件的所有行
+        lines: All lines of the log file
         
     Returns:
-        float or None: 冷启动后命中率，如果无法计算则返回None
+        float or None: Hit rate after cold start, or None if it cannot be calculated
     """
-    # 找到[cold start]行的位置
+    # Find the position of the [cold start] line
     cold_start_line_idx = None
     for i, line in enumerate(lines):
         if "[cold start]" in line:
@@ -22,7 +22,7 @@ def calculate_hitrate_after_cold_start(lines):
     if cold_start_line_idx is None:
         return None
     
-    # 冷启动前的最后一次hit和access数据
+    # Last hit and access data before cold start
     hit1 = None
     access1 = None
     for i in range(cold_start_line_idx - 1, -1, -1):
@@ -34,7 +34,7 @@ def calculate_hitrate_after_cold_start(lines):
                 access1 = int(match_access.group(1))
                 break
     
-    # 整个文件最后一次hit和access数据
+    # Last hit and access data in the entire file
     hit2 = None
     access2 = None
     for line in reversed(lines):
@@ -46,14 +46,14 @@ def calculate_hitrate_after_cold_start(lines):
                 access2 = int(match_access.group(1))
                 break
     
-    # 计算冷启动后的命中率
+    # Calculate hit rate after cold start
     if hit1 is not None and access1 is not None and hit2 is not None and access2 is not None:
         if access2 - access1 > 0:
             return (hit2 - hit1) / (access2 - access1)
     
     return None
 
-# 设置变量
+# Set variables
 model_name = "DeepSeek-R1-Distill-Qwen-1.5B"
 dataset_name = "Length"   # wild  Quality
 sample_strategy = "Random" # all  Distshift
@@ -61,7 +61,7 @@ cache_strategies = ["arc", "dbl", "lru", "lru_l"]
 # cache_strategies = ["lru", "arc"]
 cache_strategies = ["lru_l"]
 
-# 初始化结果表，key 为 Cache_Size（如 5、10...）
+# Initialize result table, key is Cache_Size (e.g. 5, 10...)
 results = {}
 
 for cache_strategy in cache_strategies:
@@ -78,7 +78,7 @@ for cache_strategy in cache_strategies:
         with open(file_path, "r") as f:
             lines = f.readlines()
 
-        # 找出最后一次出现的 gpu_hit_rate 和两种 latency
+        # Find the last occurrence of gpu_hit_rate and two types of latency
         hit_rate = None
         latency_total = None
         latency_after_cold_start = None
@@ -91,7 +91,7 @@ for cache_strategy in cache_strategies:
                     hit_rate = float(match.group(1))
                     break
 
-        # 找出最后一次出现的 "Average of first token latencies (after cold start):"
+        # Find the last occurrence of "Average of first token latencies (after cold start):"
         for line in reversed(lines):
             if "Average of first token latencies (after cold start):" in line:
                 match = re.search(r"Average of first token latencies \(after cold start\):\s*([0-9.]+)", line)
@@ -99,7 +99,7 @@ for cache_strategy in cache_strategies:
                     latency_after_cold_start = float(match.group(1))
                     break
 
-        # 找出最后一次出现的 "Average of first token latencies:" (不包含after cold start)
+        # Find the last occurrence of "Average of first token latencies:" (excluding after cold start)
         for line in reversed(lines):
             if "Average of first token latencies:" in line and "(after cold start)" not in line:
                 match = re.search(r"Average of first token latencies:\s*([0-9.]+)", line)
@@ -115,7 +115,7 @@ for cache_strategy in cache_strategies:
         results[cache_size][f"{cache_strategy.upper()}_hitrate_after_cold"] = hitrate_after_cold_start
         results[cache_size][f"{cache_strategy.upper()}_time_after_cold"] = latency_after_cold_start
 
-# 构建最终 DataFrame
+# Build final DataFrame
 df_rows = []
 for cache_size in sorted(results.keys()):
     row = {"Cache_Size": cache_size}
@@ -124,7 +124,7 @@ for cache_size in sorted(results.keys()):
 
 df = pd.DataFrame(df_rows)
 
-# 指定列顺序
+# Specify column order
 columns = ["Cache_Size"]
 for name in cache_strategies:
     name = name.upper()
@@ -141,6 +141,6 @@ for name in cache_strategies:
 
 df = df[columns]
 
-# 保存或打印结果
+# Save or print results
 df.to_csv("./test/summary.csv", index=False)
 print(df)

@@ -52,16 +52,16 @@ print(f"{variance_latency:.10f} - Variance")
 print(f"{std_dev_latency:.6f} - Standard Deviation")
 
 
-# 追加实验统计数据到 results.txt（每行一组实验数据，带空格分隔）
+# Append experiment statistics to results.txt (one experiment per line, space-separated)
 with open(results_file, "a") as f:
     f.write(f"prompt_length: {prompt_length},  mean_latency: {mean_latency:.6f} s,  "
             f"std_dev: {std_dev_latency:.6f} s\n")
 
-# 追加实验 latency 数据到 latencies.txt（每 10 个 latency 换行）
+# Append experiment latency data to latencies.txt (newline every 10 latencies)
 with open(latencies_file, "a") as f:
     f.write(f"prompt_length = {prompt_length},  latencies (s):\n  ")
     for i, latency in enumerate(latencies):
         f.write(f"{latency:.5f},  ")
-        if (i + 1) % 10 == 0:  # 每 10 个换行
+        if (i + 1) % 10 == 0:  # Newline every 10
             f.write("\n  ")
-    f.write("\n")  # 末尾换行，便于分隔不同 block_size 记录
+    f.write("\n")  # Trailing newline to separate different block_size records

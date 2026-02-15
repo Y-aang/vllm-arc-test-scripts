@@ -15,7 +15,7 @@ if __name__ == "__main__":
     TEST_ROUND = 2
     trace_dir = "./torch_prof_1024"
 
-    # 模型选择
+    # Model selection
     # model_name = "mistralai/mistral-7b-v0.1"
     model_name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             outputs = llm.generate(batch_prompts, sampling_params)
             prof.step()
 
-            # 当前 batch 的结果和 latency
+            # Results and latency for current batch
             batch_results = []
             batch_latencies = []
             for output in outputs:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
             print(f"Batch results: {batch_results}")
             print(f"First token latencies for batch: {[f'{l:.5f}' for l in batch_latencies]} seconds")
 
-    # 打印所有 batch
+    # Print all batches
     print("\nAll Results (by batch):")
     for i, br in enumerate(all_results):
         print(f"Batch {i}: {br}")
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     for i, bl in enumerate(all_latencies):
         print(f"Batch {i}: {[f'{x:.5f}' for x in bl]}")
 
-    # 展平成一维列表用于统计
+    # Flatten to 1D list for statistics
     flat_latencies = [lat for batch in all_latencies for lat in batch]
     valid_latency = flat_latencies[-TEST_ROUND * batch_size :]
     mean_latency = statistics.mean(valid_latency)
@@ -99,14 +99,14 @@ if __name__ == "__main__":
     print(f"{variance_latency:.10f} - Variance")
     print(f"{std_dev_latency:.6f} - Standard Deviation")
 
-    # 写 results_file（只记录统计信息）
+    # Write results_file (record statistics only)
     with open(results_file, "a") as f:
         f.write(
             f"block_size: {block_size}, batch_size: {batch_size}, mean_latency: {mean_latency:.6f} s,  "
             f"std_dev: {std_dev_latency:.6f} s\n"
         )
 
-    # 写 latencies_file（按 batch 输出）
+    # Write latencies_file (output by batch)
     with open(latencies_file, "a") as f:
         f.write(f"block_size = {block_size},  latencies (s):\n")
         for i, batch in enumerate(all_latencies):

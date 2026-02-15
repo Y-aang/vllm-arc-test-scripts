@@ -29,7 +29,7 @@ class RateLimiter:
         pass
 
 async def run_request(engine, sampling_params, request_id, prompt):
-    # 打印请求开始的美式时间戳
+    # Print the request start timestamp
     start = time.time()
     print(f"[{request_id}] start at: {start}")
     async for output in engine.generate(prompt, sampling_params, request_id):
@@ -38,7 +38,7 @@ async def run_request(engine, sampling_params, request_id, prompt):
             return latency, output.outputs[0].text
 
 async def main():
-    # 引擎初始化（同之前）
+    # Initialize the engine (same as before)
     engine_args = AsyncEngineArgs(
         model="Qwen/Qwen2.5-1.5B-Instruct",
         gpu_memory_utilization=0.99,
@@ -50,7 +50,7 @@ async def main():
     engine = AsyncLLMEngine.from_engine_args(engine_args)
     sampling_params = SamplingParams(max_tokens=1)
 
-    # 准备 prompts
+    # Prepare prompts
     prefixes = ["This", "That", "These", "These", "Those"]
     base = " is a very long document containing a lot of information, discussing various topics in depth. "
     repeat_count = 227  # 227 : 4087 tokens, 128 blocks
@@ -73,7 +73,7 @@ async def main():
     latencies = await asyncio.gather(*tasks)
     print("Latencies:", [f"{lat:.5f}" for lat in latencies], "seconds")
 
-    # 统计最后 TEST_ROUND 次的延迟
+    # Calculate latency statistics for the last TEST_ROUND rounds
     valid = latencies[-TEST_ROUND:]
     mean = statistics.mean(valid)
     var = statistics.variance(valid)

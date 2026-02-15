@@ -134,7 +134,7 @@ for idx, document in enumerate(documents):
         f.write("\n")
     results.append(output)
     metrics = output[0].metrics
-    first_token_latency = metrics.first_token_time - metrics.arrival_time  # 计算首 token 生成时间
+    first_token_latency = metrics.first_token_time - metrics.arrival_time  # calculate TTFT
     latencies.append(first_token_latency)
     print(f"First token latency: {first_token_latency:.5f} seconds")
     

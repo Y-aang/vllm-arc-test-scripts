@@ -55,11 +55,11 @@ with profiler.profile(
         outputs = llm.generate(batch_prompts, sampling_params)
         prof.step()
 
-        # 当前 batch 的结果和 latency
+        # Current batch results and latency
         batch_results = []
         batch_latencies = []
         for output in outputs:
-            batch_results.append(output.outputs[0].text)  # 保存生成的文本
+            batch_results.append(output.outputs[0].text)  # Save generated text
             metrics = output.metrics
             first_token_latency = metrics.first_token_time - metrics.arrival_time
             batch_latencies.append(first_token_latency)
@@ -70,7 +70,7 @@ with profiler.profile(
         # print(f"Batch results: {batch_results}")
         print(f"First token latencies for batch: {[f'{l:.5f}' for l in batch_latencies]} seconds")
 
-# 打印所有 batch
+# Print all batches
 # print("\nAll Results (by batch):")
 # for i, br in enumerate(all_results):
 #     print(f"Batch {i}: {br}")
@@ -79,13 +79,13 @@ print("\nAll Latencies (by batch):")
 for i, bl in enumerate(all_latencies):
     print(f"Batch {i}: {[f'{x:.5f}' for x in bl]}")
 
-# 展平成一维列表用于统计
+# Flatten into a 1D list for statistics
 flat_latencies = [lat for batch in all_latencies for lat in batch]
 valid_latency = flat_latencies[-TEST_ROUND * batch_size:]
 mean_latency = statistics.mean(valid_latency)
 variance_latency = statistics.variance(valid_latency)
 std_dev_latency = statistics.stdev(valid_latency)
-# 额外：第一轮 batch 的平均 latency
+# Extra: mean latency of the first batch
 first_batch_latencies = all_latencies[0]
 first_batch_mean = statistics.mean(first_batch_latencies)
 
@@ -94,12 +94,12 @@ print(f"{variance_latency:.10f} - Variance")
 print(f"{std_dev_latency:.6f} - Standard Deviation")
 print(f"{first_batch_mean:.6f} seconds - Mean Latency (first batch)")
 
-# 写 results_file（只记录统计信息，不保存所有文本）
+# Write results_file (only record statistics, not all generated text)
 with open(results_file, "a") as f:
     f.write(f"block_size: {block_size}, batch_size: {batch_size}, mean_latency: {mean_latency:.6f} s,  "
             f"std_dev: {std_dev_latency:.6f} s\n")
 
-# 写 latencies_file（按 batch 输出）
+# Write latencies_file (output per batch)
 with open(latencies_file, "a") as f:
     f.write(f"block_size = {block_size},  latencies (s):\n")
     for i, batch in enumerate(all_latencies):

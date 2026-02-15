@@ -11,7 +11,7 @@ import os
 random.seed(42)
 np.random.seed(42)
 
-# 初始化 vLLM
+# Initialize vLLM
 # model_name = "mistralai/mistral-7b-v0.1"
 # model_name = "HuggingFaceTB/SmolLM2-360M-Instruct"
 # model_name = "microsoft/Phi-3-mini-4k-instruct"
@@ -25,11 +25,11 @@ llm = LLM(model=model_name,
           enable_prefix_caching=True)
 tokenizer = llm.get_tokenizer()
 
-# 加载 SQuAD 数据集
+# Load SQuAD dataset
 dataset = load_dataset("rajpurkar/squad")
 valid_data = dataset['validation']
 
-# 分组并选择所有的 text，每个 text 只保存所有的 questions
+# Group and select all texts, keeping all questions for each text
 grouped_data = {}
 for item in valid_data:
     text = item['context']
@@ -37,12 +37,12 @@ for item in valid_data:
         grouped_data[text] = []
     grouped_data[text].append(item['question'])
 
-# 随机选择 1000 个不同的 context (key)
+# Select different contexts (keys)
 selected_texts = list(grouped_data.keys())
-# selected_texts = selected_texts[:1000]  # 不再随机
-selected_texts = selected_texts  # 不再随机
+# selected_texts = selected_texts[:1000]  # No longer random
+selected_texts = selected_texts  # No longer random
 
-# 函数：计算 text + question 的平均长度
+# Function: calculate the average length of text + question
 def calculate_average_dq_length(grouped_data, selected_texts, tokenizer):
     dq_lengths = []
     text_lengths = []
@@ -54,16 +54,16 @@ def calculate_average_dq_length(grouped_data, selected_texts, tokenizer):
             question_tokens = tokenizer(question, return_tensors="pt")["input_ids"].shape[1]
             dq_lengths.append(text_tokens + question_tokens)
 
-    # 计算平均长度
+    # Calculate average length
     avg_dq_length = sum(dq_lengths) / len(dq_lengths)
     max_dq_length = max(dq_lengths)
     min_dq_length = min(dq_lengths)
-    print(f"\n平均 Text + Question 长度 (token 数): {avg_dq_length:.2f}")
-    print(f"最大 Text + Question 长度 (token 数): {max_dq_length}")
-    print(f"最小 Text + Question 长度 (token 数): {min_dq_length}")
-    print(f"Text 的数量: {len(dq_lengths)}")
+    print(f"\nAverage Text + Question length (tokens): {avg_dq_length:.2f}")
+    print(f"Max Text + Question length (tokens): {max_dq_length}")
+    print(f"Min Text + Question length (tokens): {min_dq_length}")
+    print(f"Number of texts: {len(dq_lengths)}")
 
-    # 统计所有 context 的问题数
+    # Count the number of questions for each context
     question_counts_list = [len(grouped_data[text]) for text in selected_texts]
     print("\nQuestion counts for each context in selected_texts:")
     print(question_counts_list)
@@ -72,10 +72,10 @@ def calculate_average_dq_length(grouped_data, selected_texts, tokenizer):
 
     return avg_dq_length
 
-# 调用函数计算平均长度
+# Call function to calculate average length
 calculate_average_dq_length(grouped_data, selected_texts, tokenizer)
 
-# 通过 power_law_with_hotspot 对 text 进行采样
+# Sample texts using power_law_with_hotspot
 def power_law_with_hotspot(data, total_length=1024 * 4, exponent=1.0, 
                            window_size=256, hotspot_ratio=0.10, hotspot_boost=10):
     num_windows = total_length // window_size
@@ -96,14 +96,14 @@ def power_law_with_hotspot(data, total_length=1024 * 4, exponent=1.0,
 
     return result
 
-# 通过 Distribution Shift 采样
+# Distribution Shift sampling
 def distribution_shift_sampling(data, total_length=1024*4, window_size=1024, 
                                 exponent=1.0, shuffle_each_window=True):
     num_windows = total_length // window_size
     result = []
 
     for _ in range(num_windows):
-        # 每个窗口打乱一次
+        # Shuffle once per window
         if shuffle_each_window:
             np.random.shuffle(data)
 
@@ -112,7 +112,7 @@ def distribution_shift_sampling(data, total_length=1024*4, window_size=1024,
         base_prob = values ** -exponent
         base_prob /= base_prob.sum()
         
-        # 在当前窗口内采样
+        # Sample within the current window
         sampled_indices = np.random.choice(len(data), size=window_size, p=base_prob)
         result.extend([data[i] for i in sampled_indices])
 
@@ -125,7 +125,7 @@ def distribution_shift_sampling_batch(data, total_length=1024*8, window_size=102
     result = []
 
     for _ in range(num_windows):
-        # 每个窗口打乱一次
+        # Shuffle once per window
         if shuffle_each_window:
             np.random.shuffle(data)
 
@@ -136,7 +136,7 @@ def distribution_shift_sampling_batch(data, total_length=1024*8, window_size=102
         
         sampled = []
         for i in range(0, window_size, batch_size):
-            # 每个 batch 内不重复
+            # No duplicates within each batch
             batch_indices = np.random.choice(
                 len(data), size=min(batch_size, num_elements), 
                 replace=False, p=base_prob
@@ -151,7 +151,7 @@ def distribution_shift_sampling_batch(data, total_length=1024*8, window_size=102
 sampled_texts = distribution_shift_sampling(selected_texts)
 # sampled_texts = distribution_shift_sampling_batch(selected_texts)
 
-# 函数：为每个 sampled_texts 随机追加一个 question
+# Function: append a random question to each sampled text
 def append_random_question(sampled_texts, grouped_data):
     appended_texts = []
     for text in sampled_texts:
@@ -160,22 +160,22 @@ def append_random_question(sampled_texts, grouped_data):
             appended_texts.append(text + " " + chosen_question)
         else:
             assert False
-            appended_texts.append(text)  # 如果没有问题则保留原文本
+            appended_texts.append(text)  # Keep original text if no questions available
     return appended_texts
 
-# 使用新函数为 sampled_texts 每个元素随机追加一个 question
+# Use the function to append a random question to each element of sampled_texts
 appended_texts = append_random_question(sampled_texts, grouped_data)
 
-# 打印前10个示例
+# Print first 10 examples
 print("\nSampled Texts with Appended Questions (First 10):")
 for i, text in enumerate(appended_texts[:1]):
     print(f"{i + 1}: {text}\n")
 
-# 可选：保存结果为 JSON（调试用）
+# Optional: save results as JSON (for debugging)
 BASE_DIR = Path(__file__).resolve().parent
 json_path = BASE_DIR / "squad_sampled_texts_with_questions.json"
 # json_path = "/home/shenyang/tests/synthesis/SQuAD/sample/squad_sampled_texts_with_questions.json"
 with open(json_path, 'w', encoding='utf-8') as json_file:
     json.dump(appended_texts, json_file, ensure_ascii=False, indent=4)
 
-print(f"\n已保存为: {json_path}, 共生成 {len(appended_texts)} 条样本。")
+print(f"\nSaved to: {json_path}, generated {len(appended_texts)} samples.")

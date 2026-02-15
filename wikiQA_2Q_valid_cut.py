@@ -84,7 +84,7 @@ selected_prompts = doc_samples_cut
 token_lengths = []
 for idx, prompt in enumerate(selected_prompts):
     token_len = tokenizer(prompt, return_tensors="pt")["input_ids"].shape[1]
-    token_lengths.append(token_len)  # 记录下来
+    token_lengths.append(token_len)  # record the length
     print(f"Prompt {idx}: {token_len} tokens")
 avg_token_len = sum(token_lengths) / len(token_lengths)
 print(f"Average prompt token length: {avg_token_len:.2f} tokens")

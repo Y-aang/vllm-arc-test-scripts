@@ -68,7 +68,7 @@ for idx, document in enumerate(documents):
         f.write("\n")
     results.append(output)
     metrics = output[0].metrics
-    first_token_latency = metrics.first_token_time - metrics.arrival_time  # 计算首 token 生成时间
+    first_token_latency = metrics.first_token_time - metrics.arrival_time  # calculate TTFT
     latencies.append(first_token_latency)
     print(f"First token latency: {first_token_latency:.5f} seconds")
     
@@ -94,12 +94,12 @@ variance_odd = statistics.stdev(odd_indices_latency)
 print(f"{mean_latency:.6f} seconds - Mean Latency")
 print(f"{variance_latency:.10f} - Variance")
 print(f"{std_dev_latency:.6f} - Standard Deviation")
-print(f"{mean_even:.6f} seconds - Mean Latency (偶数下标,Miss)")
-print(f"{variance_even:.10f} - Standard Deviation (偶数下标,Miss)")
-print(f"{mean_odd:.6f} seconds - Mean Latency (奇数下标, Hit)")
-print(f"{variance_odd:.10f} - Standard Deviation (奇数下标, Hit)")
+print(f"{mean_even:.6f} seconds - Mean Latency (even index, Miss)")
+print(f"{variance_even:.10f} - Standard Deviation (even index, Miss)")
+print(f"{mean_odd:.6f} seconds - Mean Latency (odd index, Hit)")
+print(f"{variance_odd:.10f} - Standard Deviation (odd index, Hit)")
 
-# 将两个值写入 microbench.txt
+# Write the two values to microbench.txt
 with open("/home/shenyang/tests/verify/result/microbench.txt", "a") as f:
     f.write(f"{mean_even:.6f},{mean_odd:.6f}\n")
 
