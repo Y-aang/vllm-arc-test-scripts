@@ -1,16 +1,50 @@
-# Test Scripts for vLLM
+# Test Scripts for vLLM-ARC
 
-## Some Useful Scripts
-- `cache_evicion.py`: Set up several sequences to fill the cache and observe the evictor's behavior under hit and miss conditions.
-- `blocksize_batch_exp.sh`, `blocksize_batch_exp.sh`: for block size experiment.
-- `positional_dependency.sh`, `positional_dependency.py`: for positional dependency experiment.
-- `wikiQA_2Q_valid.py`, `wikiQA_2Q_valid_cut.py`
-- `./synthesis/`: for HotSpot and Distribution Shift experiments.
-- `./data_process/`: process wikiQA and view results.
-
-## HotSpot Test (Example: SQuAD)
+## Document QA Test (Example: QuALITY, WikiQA)
 ### Step 0: Prepare Environment
-Download [my vLLM Eviction Strategy Integration](https://github.com/Y-aang/vllm.git). Build vLLM from source (Reference to vLLM official manual).
+Install [vLLM-ARC](https://github.com/Y-aang/vllm-ARC). Build from source (Reference to vLLM official manual).
+### Step 1: Download Dataset
+For QuALITY, the dataset will be downloaded automically in step 2.
+
+For WikiQA, download and process data using [`download_wikiqa.py`](synthesis/WikiQA/download_wikiqa.py).
+```
+python download_wikiqa.py
+```
+### Step 2: Sample from Dataset
+```
+# Sample from QuALITY
+python ./synthesis/Quality/quality_distshift_sample.py
+# Sample from WikiQA
+python ./synthesis/WikiQA/wikiqa_distshift_sample.py
+```
+### Step 3: Run Experiment
+```
+# Modify setting (model, device, datapath) in ./synthesis/test_script_batch.py, model_config.py (# Step 1: Parameters)
+# Set experiment parameters (cache size, cache strategy) in ./synthesis/quality_dist_test.sh, wikiqa_dist_test.sh
+# Experiment logs would be generated under ./synthesis/
+bash ./synthesis/quality_dist_test.sh
+bash ./synthesis/wikiqa_dist_test.sh
+```
+### Step 4: Collect Data
+```
+# Modify information for experiment you want to collect in ./synthesis/collect_result.py
+python ./synthesis/collect_result.py
+```
+## Conversation Test (Example: Qwen-Bailian)
+### Step 0: Prepare Environment
+Install [vLLM-ARC](https://github.com/Y-aang/vllm-ARC). Build from source (Reference to vLLM official manual).
+### Step 1: Download Dataset
+
+### Step 2: Sample from Dataset
+
+### Step 3: Run Experiment
+
+### Step 4: Collect Data
+
+
+## HotSpot Sampling Verification (Example: SQuAD)
+### Step 0: Prepare Environment
+Install [vLLM-ARC](https://github.com/Y-aang/vllm-ARC). Build from source (Reference to vLLM official manual).
 ### Step 1: HotSpot sampling
 ```
 python squad_hotspot_sample.py > ./sample/squad_hotspot_sample.txt 2>&1
@@ -28,3 +62,10 @@ python collect_result.py
 ```
 ### Step 4: Plot the charts
 Copy the `.csv`. Use `view_graph.ipynb`. (From [Simulator tool box](https://github.com/Y-aang/vLLM-Eviction-Simulator.git)) 
+## Some Useful Scripts
+- `cache_evicion.py`: Set up several sequences to fill the cache and observe the evictor's behavior under hit and miss conditions.
+- `blocksize_batch_exp.sh`, `blocksize_batch_exp.sh`: for block size experiment.
+- `positional_dependency.sh`, `positional_dependency.py`: for positional dependency experiment.
+- `wikiQA_2Q_valid.py`, `wikiQA_2Q_valid_cut.py`
+- `./synthesis/`: for HotSpot and Distribution Shift experiments.
+- `./data_process/`: process wikiQA and view results.
